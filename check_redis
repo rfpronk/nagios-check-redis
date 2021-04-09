@@ -4,7 +4,7 @@ require 'optparse'
 require 'rubygems'
 require 'redis'
 
-options = { :conn => { :host => "localhost", :port => 6379, :password => nil, :timeout => 5 }, 
+options = { :conn => { :host => "localhost", :port => 6379, :password => nil, :timeout => 5, :ssl => false, :ssl_params => {:ca_file => nil}},
             :graphite => {},
             :nagios => {}
           }
@@ -27,6 +27,7 @@ OptionParser.new do |opt|
   opt.on('-p', '--port [PORT]', 'Port (Default: "6379")') { |o| options[:conn][:port] = o if o }
   opt.on('-P', '--password [PASSWORD]', 'Password (Default: blank)') { |o| options[:conn][:password] = o if o }
   opt.on('-t', '--timeout [TIMEOUT]', Integer, 'Timeout in seconds (Default: 5)') { |o| options[:conn][:timeout] = o if o }
+  opt.on('-S', '--ssl [CA_FILE]', 'Connect to Redis using SSL/TLS, verify against given CA') { |o| options[:conn][:ssl] = true; options[:conn][:ssl_params][:ca_file] = o if o }
 
   opt.on('-D', '--database [DATABASE]', Integer, 'If using key, select db (Default: 0)') { |o| options[:conn][:db] = o if o }
   options[:use_stats] = 1
@@ -84,7 +85,7 @@ class CheckRedis
     elapsed_time = (stop_time - start_time)
 
     # Report results to Graphite
-    if opts[:graphite]
+    if opts[:graphite][:host]
       graph_result(value, opts[:graphite], cmd, elapsed_time)
     end
 
